@@ -1,3 +1,247 @@
 <!DOCTYPE html>
-<!-- (코드 내용은 이전 답변과 동일합니다. 간결하게 표시 생략) -->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>감성 달력</title>
+  <link href="https://fonts.googleapis.com/css2?family=SUIT&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'SUIT', sans-serif;
+      background: linear-gradient(to bottom, #f8f9fa, #eaeaea);
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      color: #1d1d1f;
+    }
+    h1 {
+      margin: 30px 0 20px;
+      font-size: 2rem;
+    }
+    .controls, .month-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0 20px;
+    }
+    button {
+      padding: 10px 16px;
+      font-size: 0.95em;
+      background-color: white;
+      color: #1d1d1f;
+      border: 1px solid #ddd;
+      border-radius: 16px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background-color: #f1f1f1;
+    }
+    .calendar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto 60px;
+    }
+    .month {
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      width: 260px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .month.expanded {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 92vw;
+      max-width: 900px;
+      z-index: 10;
+    }
+    .month.hidden {
+      display: none;
+    }
+    .month h2 {
+      font-size: 1.6em;
+      color: #ff6b6b;
+      margin-bottom: 10px;
+    }
+    .day-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .day {
+      padding: 6px 0;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.9em;
+    }
+    .label {
+      font-size: 0.7em;
+      margin-top: 2px;
+      color: #ff6b6b;
+    }
+    .sunday {
+      color: red;
+    }
+    .saturday {
+      color: #3c77e3;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="yearTitle"></h1>
+  <div class="controls">
+    <button onclick="changeYear(-1)">◀ 이전년</button>
+    <button onclick="showAllMonths()">전체 보기</button>
+    <button onclick="changeYear(1)">다음년 ▶</button>
+  </div>
+  <div class="calendar" id="calendar"></div>
+  <script>
+    let currentYear = new Date().getFullYear();
+
+    const holidays = {
+      "2025-01-01": "신정",
+      "2025-03-01": "삼일절",
+      "2025-05-05": "어린이날",
+      "2025-06-06": "현충일",
+      "2025-08-15": "광복절",
+      "2025-10-03": "개천절",
+      "2025-10-09": "한글날",
+      "2025-12-25": "크리스마스",
+      "2025-01-28": "설 연휴",
+      "2025-01-29": "설날",
+      "2025-01-30": "설 연휴",
+      "2025-10-05": "추석 연휴",
+      "2025-10-06": "추석",
+      "2025-10-07": "추석 연휴"
+    };
+
+    function showAllMonths() {
+      document.getElementById("yearTitle").textContent = `📅 ${currentYear} 감성 달력`;
+      const cal = document.getElementById("calendar");
+      cal.innerHTML = "";
+      for (let i = 0; i < 12; i++) {
+        const monthDiv = document.createElement("div");
+        monthDiv.className = "month";
+        const monthTitle = document.createElement("h2");
+        monthTitle.textContent = `${i + 1}월`;
+        monthDiv.appendChild(monthTitle);
+
+        const grid = document.createElement("div");
+        grid.className = "day-grid";
+        const start = new Date(currentYear, i, 1).getDay();
+        const days = new Date(currentYear, i + 1, 0).getDate();
+
+        for (let j = 0; j < start; j++) grid.appendChild(document.createElement("div"));
+
+        for (let d = 1; d <= days; d++) {
+          const dayEl = document.createElement("div");
+          dayEl.className = "day";
+          const dow = new Date(currentYear, i, d).getDay();
+          if (dow === 0) dayEl.classList.add("sunday");
+          if (dow === 6) dayEl.classList.add("saturday");
+
+          const dateStr = `${currentYear}-${String(i + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          dayEl.textContent = d;
+          if (holidays[dateStr]) {
+            const label = document.createElement("div");
+            label.className = "label";
+            label.textContent = holidays[dateStr];
+            dayEl.appendChild(label);
+          }
+          grid.appendChild(dayEl);
+        }
+
+        monthDiv.appendChild(grid);
+        monthDiv.onclick = () => expandMonth(i);
+        cal.appendChild(monthDiv);
+      }
+    }
+
+    function expandMonth(index) {
+      const cal = document.getElementById("calendar");
+      cal.innerHTML = "";
+
+      const monthDiv = document.createElement("div");
+      monthDiv.className = "month expanded";
+      const title = document.createElement("h2");
+      title.textContent = `${index + 1}월`;
+      monthDiv.appendChild(title);
+
+      const controls = document.createElement("div");
+      controls.className = "month-controls";
+
+      const prev = document.createElement("button");
+      prev.textContent = "◀ 이전월";
+      prev.onclick = () => {
+        if (index === 0) {
+          currentYear--;
+          expandMonth(11);
+        } else {
+          expandMonth(index - 1);
+        }
+      };
+
+      const center = document.createElement("button");
+      center.textContent = "전체 보기";
+      center.onclick = showAllMonths;
+
+      const next = document.createElement("button");
+      next.textContent = "다음월 ▶";
+      next.onclick = () => {
+        if (index === 11) {
+          currentYear++;
+          expandMonth(0);
+        } else {
+          expandMonth(index + 1);
+        }
+      };
+
+      controls.append(prev, center, next);
+      monthDiv.appendChild(controls);
+
+      const grid = document.createElement("div");
+      grid.className = "day-grid";
+      const start = new Date(currentYear, index, 1).getDay();
+      const days = new Date(currentYear, index + 1, 0).getDate();
+      for (let j = 0; j < start; j++) grid.appendChild(document.createElement("div"));
+      for (let d = 1; d <= days; d++) {
+        const el = document.createElement("div");
+        el.className = "day";
+        const dow = new Date(currentYear, index, d).getDay();
+        if (dow === 0) el.classList.add("sunday");
+        if (dow === 6) el.classList.add("saturday");
+        el.textContent = d;
+        const dateStr = `${currentYear}-${String(index + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        if (holidays[dateStr]) {
+          const label = document.createElement("div");
+          label.className = "label";
+          label.textContent = holidays[dateStr];
+          el.appendChild(label);
+        }
+        grid.appendChild(el);
+      }
+      monthDiv.appendChild(grid);
+      cal.appendChild(monthDiv);
+    }
+
+    function changeYear(offset) {
+      currentYear += offset;
+      showAllMonths();
+    }
+
+    showAllMonths();
+  </script>
+</body>
 </html>
